@@ -3,9 +3,8 @@ Description=Light show
 
 [Service]
 User=pi
-# don't set rpi-blink-led as the working directory, so it doesn't use the mocked RPi module
-WorkingDirectory=/home/pi/
-ExecStart=/usr/bin/python3 /home/pi/rpi-blink-led/breathe.py
+WorkingDirectory=/home/pi/rpi-blink-led/
+ExecStart=/usr/bin/python3 breathe.py
 Restart=on-failure
 
 [Install]
