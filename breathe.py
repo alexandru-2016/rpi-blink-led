@@ -1,13 +1,17 @@
 import signal
 import time
-import RPi.GPIO as GPIO
+from datetime import datetime
+import pytz
 
+import RPi.GPIO as GPIO
 import pytweening
 from astral import Astral
 
 LED_PIN=18
 
 def setup_sun():
+    global city
+    
     city_name = 'Bucharest'
     a = Astral()
     a.solar_depression = 'civil'
@@ -81,15 +85,60 @@ def do_blink():
 setup_sun()
 setup_gpio()
 
-while True:
-    sun = city.sun()
+
+def update_sun_data(now):
+    global dusk, dawn
+
+    sun = city.sun(date=now)
 
     print('Dawn:    %s' % str(sun['dawn']))
-    print('Sunrise: %s' % str(sun['sunrise']))
-    print('Noon:    %s' % str(sun['noon']))
+    # print('Sunrise: %s' % str(sun['sunrise']))
+    # print('Noon:    %s' % str(sun['noon']))
     print('Dusk:    %s' % str(sun['dusk']))
-    print('Sunset:  %s' % str(sun['sunset']))
+    # print('Sunset:  %s' % str(sun['sunset']))
 
+    dusk = sun['dusk']
+    dawn = sun['dawn']
+
+
+def reset_sun_data():
+    global dusk, dawn
+
+    dusk = None
+    dawn = None
+
+
+def check_day_sleep():
+    global dusk, dawn
+
+    now = datetime.now()
+    # now = datetime(2019, 12, 11, 10, 0, 0)
+    now = pytz.timezone(city.timezone).localize(now)
+
+    if not dusk:
+        print("Computing sun data ...")
+        update_sun_data(now)
+
+    if now < dusk and now > dawn:
+        print("Good morning! Time is {}.".format(str(now)))
+        print("Wake me up when the night shift starts.")
+
+        time_delta = dusk - now
+        print("Set wake up timer to: {} ...".format(str(time_delta)))
+
+        # in case ther is a problem with the delta computing
+        sleep_time = max(10, time_delta.total_seconds())
+        time.sleep(sleep_time)
+        
+        print("Good evening!")
+        reset_sun_data()
+
+
+reset_sun_data()
+
+while True:
+    check_day_sleep()
+    
     do_breath()
     time.sleep(5)
     do_blink()
