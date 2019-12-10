@@ -1,0 +1,14 @@
+[Unit]
+Description=Light show
+
+[Service]
+WorkingDirectory=/home/pi/rpi-blink-led
+ExecStart=python3 breathe.py
+Restart=on-failure
+
+[Install]
+WantedBy=sysinit.target
+
+
+
+
