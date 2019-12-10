@@ -43,47 +43,35 @@ def cleanup():
     GPIO.cleanup()
     print("Cleaned up GPIO")
 
-def breathe(count):
+def breathe(count, step_sleep):
     for repeat in range(count):
         for dc in range(100, 17, -2):
             ease = pytweening.easeOutQuad(dc / 100)
-            #print("second: ", ease)
             p.ChangeDutyCycle(ease * 100)
 
-            time.sleep(0.05)
-
-        # print("Finished ease out")
+            time.sleep(step_sleep)
 
         for dc in range(58, 101, 2):
             ease = pytweening.easeInQuad(dc / 100)
-            #print("first: ", ease)
             p.ChangeDutyCycle(ease * 100)
 
-            time.sleep(0.05)
+            time.sleep(step_sleep)
 
-        # print("Finished ease in")
         time.sleep(1)
 
 
 def do_breath():
-    breathe(6)
+    breathe(6, 0.05)
+    
+    # make sure in the end we are at full on, no matter what breathe does
     p.ChangeDutyCycle(100)
 
 
-def blink(count):
-    for i in range(count):
-        p.ChangeDutyCycle(30)
-        time.sleep(0.3)
-        p.ChangeDutyCycle(100)
-        time.sleep(0.3)
-
-
 def do_blink():
-    blink(5)
+    breathe(5, 0.01)
 
-
-setup_sun()
-setup_gpio()
+    # make sure in the end we are at full on, no matter what breathe does
+    p.ChangeDutyCycle(100)
 
 
 def update_sun_data(now):
@@ -134,7 +122,11 @@ def check_day_sleep():
         reset_sun_data()
 
 
+# main code starts here
+
 reset_sun_data()
+setup_sun()
+setup_gpio()
 
 while True:
     check_day_sleep()
