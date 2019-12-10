@@ -1,3 +1,9 @@
+import sys
+
+# search in current directory at the end
+# local RPi module is for dev testing only
+sys.path.append(sys.path.pop(0))
+
 import signal
 import time
 from datetime import datetime
@@ -25,9 +31,6 @@ def setup_sun():
 def setup_gpio():
     global p
 
-    signal.signal(signal.SIGINT, exit_gracefully)
-    signal.signal(signal.SIGTERM, exit_gracefully)
-
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(LED_PIN, GPIO.OUT)
 
@@ -39,36 +42,42 @@ def exit_gracefully(signum, frame):
     exit()
 
 def cleanup():
-    p.stop()
+    if p:
+        p.stop()
+    
     GPIO.cleanup()
     print("Cleaned up GPIO")
 
-def breathe(count, step_sleep):
+def breathe(count, step_sleep, repeat_sleep):
     for repeat in range(count):
-        for dc in range(100, 17, -2):
+        for dc in range(100, 5, -2):
             ease = pytweening.easeOutQuad(dc / 100)
             p.ChangeDutyCycle(ease * 100)
 
             time.sleep(step_sleep)
 
-        for dc in range(58, 101, 2):
+        # print("ease out end")
+
+        for dc in range(34, 101, 2):
             ease = pytweening.easeInQuad(dc / 100)
             p.ChangeDutyCycle(ease * 100)
 
             time.sleep(step_sleep)
 
-        time.sleep(1)
+        # print("ease in end")
+
+        time.sleep(repeat_sleep)
 
 
 def do_breath():
-    breathe(6, 0.05)
+    breathe(3, 0.05, 1)
     
     # make sure in the end we are at full on, no matter what breathe does
     p.ChangeDutyCycle(100)
 
 
 def do_blink():
-    breathe(5, 0.01)
+    breathe(3, 0.01, 0)
 
     # make sure in the end we are at full on, no matter what breathe does
     p.ChangeDutyCycle(100)
@@ -77,6 +86,7 @@ def do_blink():
 def update_sun_data(now):
     global dusk, dawn
 
+    print("Computing sun data ...")
     sun = city.sun(date=now)
 
     print('Dawn:    %s' % str(sun['dawn']))
@@ -104,7 +114,6 @@ def check_day_sleep():
     now = pytz.timezone(city.timezone).localize(now)
 
     if not dusk:
-        print("Computing sun data ...")
         update_sun_data(now)
 
     if now < dusk and now > dawn:
@@ -126,12 +135,20 @@ def check_day_sleep():
 
 reset_sun_data()
 setup_sun()
+
+signal.signal(signal.SIGINT, exit_gracefully)
+signal.signal(signal.SIGTERM, exit_gracefully)
+
 setup_gpio()
 
 while True:
     check_day_sleep()
     
     do_breath()
-    time.sleep(5)
+    time.sleep(10)
+
+    do_breath()
+    time.sleep(10)
+    
     do_blink()
     time.sleep(5)
