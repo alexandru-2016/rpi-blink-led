@@ -4,6 +4,7 @@ Description=Light show
 [Service]
 User=pi
 WorkingDirectory=/home/pi/rpi-blink-led/
+Environment=PYTHONUNBUFFERED=1
 ExecStart=/usr/bin/python3 breathe.py
 Restart=on-failure
 
