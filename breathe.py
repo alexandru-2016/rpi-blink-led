@@ -120,6 +120,8 @@ def check_day_sleep():
         print("Good morning! Time is {}.".format(str(now)))
         print("Wake me up when the night shift starts.")
 
+        p.ChangeDutyCycle(0)
+
         time_delta = dusk - now
         print("Set wake up timer to: {} ...".format(str(time_delta)))
 
