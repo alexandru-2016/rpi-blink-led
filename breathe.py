@@ -50,34 +50,42 @@ def cleanup():
 
 def breathe(count, step_sleep, repeat_sleep):
     for repeat in range(count):
-        for dc in range(100, 5, -2):
-            ease = pytweening.easeOutQuad(dc / 100)
-            p.ChangeDutyCycle(ease * 100)
+        for dc in range(1000, -1, -2):
+            ease = pytweening.easeOutQuad(dc / 1000) * 100
+            # print(ease)
+            p.ChangeDutyCycle(ease)
 
             time.sleep(step_sleep)
+        
+        time.sleep(repeat_sleep)
 
         # print("ease out end")
 
-        for dc in range(34, 101, 2):
-            ease = pytweening.easeInQuad(dc / 100)
-            p.ChangeDutyCycle(ease * 100)
+        for dc in range(1, 1001, 2):
+            ease = pytweening.easeInQuad(dc / 1000) * 100
+            # print(ease)
+            p.ChangeDutyCycle(ease)
 
             time.sleep(step_sleep)
 
         # print("ease in end")
 
         time.sleep(repeat_sleep)
-
-
-def do_breath():
-    breathe(3, 0.05, 1)
     
     # make sure in the end we are at full on, no matter what breathe does
     p.ChangeDutyCycle(100)
 
 
-def do_blink():
-    breathe(3, 0.01, 0)
+def slow_breathe():
+    breathe(3, 0.02, 1)
+
+
+def normal_breathe():
+    breathe(3, 0.005, 1)
+
+
+def blink():
+    breathe(3, 0.001, 0)
 
     # make sure in the end we are at full on, no matter what breathe does
     p.ChangeDutyCycle(100)
@@ -146,11 +154,11 @@ setup_gpio()
 while True:
     check_day_sleep()
     
-    do_breath()
+    slow_breathe()
     time.sleep(10)
 
-    do_breath()
+    normal_breathe()
     time.sleep(10)
     
-    do_blink()
+    blink()
     time.sleep(5)
