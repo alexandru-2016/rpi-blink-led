@@ -15,7 +15,10 @@ from astral import Astral
 
 LED_PIN=18
 
-def setup_sun():
+dawn = datetime(2000, 1, 1, 10, 0, 0)
+dusk = datetime(2000, 1, 1, 20, 0, 0)
+
+def setup_location():
     global city
     
     city_name = 'Bucharest'
@@ -107,21 +110,20 @@ def update_sun_data(now):
     dawn = sun['dawn']
 
 
-def reset_sun_data():
-    global dusk, dawn
-
-    dusk = None
-    dawn = None
-
-
 def check_day_sleep():
     global dusk, dawn
 
     now = datetime.now()
     # now = datetime(2019, 12, 11, 10, 0, 0)
+
+    # From astral notes:
+    # When creating a datetime object in a specific timezone 
+    # do not use the tzinfo parameter to the datetime constructor. 
+    # Instead please use the localize() method on the correct pytz timezone
     now = pytz.timezone(city.timezone).localize(now)
 
-    if not dusk:
+    # if day of now is not day of dawn, update sun data
+    if now.date() != dawn.date():
         update_sun_data(now)
 
     if now < dusk and now > dawn:
@@ -133,18 +135,16 @@ def check_day_sleep():
         time_delta = dusk - now
         print("Set wake up timer to: {} ...".format(str(time_delta)))
 
-        # in case ther is a problem with the delta computing
+        # in case ther is a problem with the delta computing, make sure sleep time is positive
         sleep_time = max(10, time_delta.total_seconds())
         time.sleep(sleep_time)
         
         print("Good evening!")
-        reset_sun_data()
 
 
 # main code starts here
 
-reset_sun_data()
-setup_sun()
+setup_location()
 
 signal.signal(signal.SIGINT, exit_gracefully)
 signal.signal(signal.SIGTERM, exit_gracefully)
